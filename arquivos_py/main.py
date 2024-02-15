@@ -2,7 +2,7 @@
 from http.server import SimpleHTTPRequestHandler
 import os
 import socketserver
-from urllib.parse import urlparse,parse_qs
+from urllib.parse import parse_qs
 
 
 # port = 8000
@@ -53,36 +53,8 @@ class MyHandler(SimpleHTTPRequestHandler):
                                       f'<div class="error-message">{mensagem}</div>')
             
             self.wfile.write(content.encode('utf-8'))
-            
-        elif self.path.startswith('/cadastro'):
-            
-            query_params = parse_qs(urlparse(self.path).query)
-            login = query_params.get('login',[''][0])
-            senha = query_params.get('senha',[''][0])
-            
-            welcome_mensage = f"Olá {login}, seja bem-vindo! Parecemos que voce é novo por aqui. Complete o seu cadastro"
-            
-            self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-            
-            with open(os.path.join(os.getcwd(), 'cadastro.html'), 'r', encoding='utf-8') as cadastro_file:
-                content = cadastro_file.read()
-                
-            content = content.replace('{login}', login)
-            content = content.replace('{senha}', senha)
-            content = content.replace('{welcome_mensage}', welcome_mensage)
-            
-            self.wfile.write(content.encode('utf-8'))
-            
-            return
-            
-             
-            
         else:
             super().do_GET()
-            
-        
         
             
     def usuario_exsitente(self, login ,senha):
@@ -95,14 +67,7 @@ class MyHandler(SimpleHTTPRequestHandler):
                     print("senha_armazenada: "+senha)
                     
                     return senha == stored_senha
-        return False 
-    
-    def remover_ultima_linha(self,arquivo):
-        print("vou excluir ultima linha")
-        with open(arquivo,'r', encoding='utf-8') as file:
-            lines = file.readlines()
-        with open(arquivo, 'w', encoding= 'utf-8') as file:
-            file.writelines(lines[:-1])             
+        return False            
 
     def do_POST(self):
         if self.path == '/enviar_login':
@@ -138,24 +103,12 @@ class MyHandler(SimpleHTTPRequestHandler):
                     with open(os.path.join(os.getcwd(), 'cadastrado.html'), 'r') as accept_page:
                         content = accept_page.read()
 
-                    self.send_response(302)
-                    self.send_header("Content-type", f"/cadastro?login={login}$senha={senha}")
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html")
                     self.end_headers()
                     self.wfile.write(content.encode('utf-8'))
-                    
-        elif self.path.startswith('/confirmar_cadastro'):
-            content_length = int(self.headers['Content-Length'])
-            body = self.rfile.read(content_length).decode('utf-8')
-            form_data = parse_qs(body,keep_blank_values=True)
-            
-            login = form_data.get('login',[''])[0]
-            senha = form_data.get('senha',[''])[0]
-            nome = form_data.get('nome',[''])[0]
-            
-            print("Nome: "+nome)
         else:
             super(MyHandler,self).do_POST()
-        
 
 
         

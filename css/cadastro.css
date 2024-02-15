@@ -19,12 +19,6 @@ form {
     box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
 }
 
-.error-message {
-    color: red;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
 label {
     font-size: 18px;
     margin-top: 10px;
