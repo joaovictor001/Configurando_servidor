@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="css/cadastro.css">
 </head>
 <body>
-    <form action="/enviar_cadastro" method="post">
+    <form action="/confirmar_cadastro" method="post">
         <label for="nome">Nome:</label>
         <input type="text" name="nome" id="nome" required>
         <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required>
+        <input type="email" name="email" id="email" value="{login}">
         <label for="senha">Senha:</label>
-        <input type="password" name="senha" id="senha" required>
+        <input type="password" name="senha" id="senha" value="{senha}">
         <button type="submit">Cadastrar</button>
     </form>
 </body>
