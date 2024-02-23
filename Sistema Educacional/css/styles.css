@@ -45,3 +45,34 @@ p{
   color: #ddd; 
   font-size: large;
 }
+.Cadastrar{
+  background-color:  rgb(25, 25, 163);;
+  width: 30%;
+  height: 100%;
+  float: right; /* Mover para a direita */
+  margin-right: 20px; /* Adicionar margem à direita para espaçamento */
+  border: none;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  padding: 10px 20px;
+  margin-top: 20px;
+}
+table{
+  margin-top: 10%;
+}
+.excluir{
+  background-color: red;
+  
+  margin-right: 10px;
+  width: 20%;
+  height:30px;
+}
+.Visualizar{
+  background-color: green;
+
+  width: 20%;
+  height:30px;
+
+}

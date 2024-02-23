@@ -59,7 +59,25 @@ class MyMandler(SimpleHTTPRequestHandler):
                                       f'<div class="error-message">{mensagem}</div>')
            
      
-            self.wfile.write(content.encode('utf-8'))  
+            self.wfile.write(content.encode('utf-8'))
+            
+        elif self.path == '/Turma_existente':
+
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+           
+
+            with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r', encoding='utf-8') as login_file:
+                content = login_file.read()
+               
+
+            mensagem = "Turma ja existe em nosso banco"
+            content = content.replace('<!-- Mensagem de erro será inserida aqui -->',
+                                      f'<div class="error-message">{mensagem}</div>')
+           
+     
+            self.wfile.write(content.encode('utf-8'))    
        
         elif self.path.startswith('/novo_cadastro'):
  
@@ -91,10 +109,23 @@ class MyMandler(SimpleHTTPRequestHandler):
             self.wfile.write(content.encode('utf-8'))
  
             return 
+        elif self.path =='/Turmas':
+
+            try:
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r',encoding='UTF-8') as login_file:
+                    content = login_file.read()
+                self.send_response(200)
+                self.send_header("content-type","text/html")
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))          
+
+            except FileNotFoundError:
+                pass
        
         else:
 
             super().do_GET()
+            
  
     def usuario_existente(self, login, senha):
         #verifica se o login já existe
@@ -115,6 +146,10 @@ class MyMandler(SimpleHTTPRequestHandler):
         senha_hash = hashlib.sha256(senha.encode("UTF-8")).hexdigest()
         with open('dados.login.txt', 'a', encoding='UTF-8') as file:
             file.write(f'{login};{senha_hash};{nome}\n')
+            
+    def adicionar_turma(self,turma,descricao):
+        with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
+            file.write(f'{turma};{descricao}\n')
  
  
     def remover_ultima_linha(self,arquivo):
@@ -144,7 +179,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             senha = form_data.get('senha', [''])[0]
            
             if self.usuario_existente(login, senha):
-                with open(os.path.join(os.getcwd(), 'cadastrado.html'), 'r', encoding='utf-8') as existe:
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
                     content_file = existe.read()
 
                 self.send_response(200)
@@ -214,6 +249,43 @@ class MyMandler(SimpleHTTPRequestHandler):
                     self.send_header("Content-type", "text/html; charset=utf-8")
                     self.end_headers()
                     self.wfile.write("A senha não confere.Retome o procedimento!". encode('utf-8'))
+                    
+        elif self.path.startswith('/cad_turmas'):
+            content_length = int(self.headers['Content-Length'])
+            #le o corpo dA REQUISIÇÃO
+            body= self.rfile.read(content_length).decode('utf-8')
+            #Parseia os dados do formulario
+            from_data = parse_qs(body, keep_blank_values=True)
+ 
+            Codigo = from_data.get('Codigo', [''])[0]
+            Descricao = from_data.get('Descricao', [''])[0]
+            
+            print("teste Codigo: "+ Codigo)
+            print("teste desc: "+ Descricao)
+            
+            with open('dados.turmas.txt','r', encoding='utf-8') as file:
+                lines = file.readlines()
+ 
+            with open('dados.turmas.txt','w', encoding='utf-8') as file:
+                for line in lines:
+                    Codigo, Descricao = line.strip().split(';')
+                    line = f"{Codigo};{Descricao} \n"
+                    file.write(line)
+                    
+            if any(line.startswith(f"{Codigo};") for line in open("dados.turmas.txt", "r", encoding="UTF-8")):
+                self.send_response(302)
+                self.send_header('Location', '/Turma_existente')
+                self.end_headers()
+                return 
+            
+            else:            
+                self.adicionar_turma(Codigo,Descricao)
+                self.send_response(302)
+                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.end_headers()
+                
+            
+            
         else:
             super(MyMandler,self).do_POST()
  
