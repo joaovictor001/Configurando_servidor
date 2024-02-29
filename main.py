@@ -156,10 +156,21 @@ class MyMandler(SimpleHTTPRequestHandler):
             return False
     def Turma_existente(self, codigo, descricao):
         #verifica se o login já existe
-            with open('dados.login.txt', 'r', encoding='utf-8') as file:
+            with open('dados.turmas.txt', 'r', encoding='utf-8') as file:
                 for line in file:
                     if line.strip():
-                        codigo_txt, descricao_txt,  = line.strip().split(';')
+                        codigo_txt,descricao_txt = line.strip().split(';')
+                    if codigo == codigo_txt:
+                        print(descricao)
+                        print(descricao_txt)
+                        return codigo == codigo_txt
+            return False
+    def Atividade_existente(self, codigo, descricao):
+        #verifica se o login já existe
+            with open('dados.aitividade.txt', 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.strip():
+                        codigo_txt,descricao_txt = line.strip().split(';')
                     if codigo == codigo_txt:
                         print(descricao)
                         print(descricao_txt)
@@ -176,7 +187,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             file.write(f'{turma};{descricao}\n')
             
     def adicionar_atividade(self,cod_atividade,descricao):
-        with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
+        with open('dados.aitividade.txt', 'a', encoding='UTF-8') as file:
             file.write(f'{cod_atividade};{descricao}\n')        
  
  
@@ -288,23 +299,18 @@ class MyMandler(SimpleHTTPRequestHandler):
             Codigo = from_data.get('Codigo',[''])[0]
             Descricao = from_data.get('Descricao',[''])[0]
             
-            print("teste Codigo: "+ Codigo)
-            print("teste desc: "+ Descricao)
-            
-            with open('dados.turmas.txt','r', encoding='utf-8') as file:
-                lines = file.readlines()
- 
-            with open('dados.turmas.txt','w', encoding='utf-8') as file:
-                for line in lines:
-                    Codigo, Descricao = line.strip().split(';')
-                    line = f"{Codigo};{Descricao}\n"
-                    file.write(line)
-                    
-            if any(line.startswith(f"{Codigo};") for line in open("dados.turmas.txt", "r", encoding="UTF-8")):
-                self.send_response(302)
-                self.send_header('Location', '/Turma_existente')
+            if self.Turma_existente(Codigo,Descricao):
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r', encoding='utf-8') as existe:
+                    content_file = existe.read()
+                mensagem = "Turma ja existe em nosso banco"
+                content_file = content_file.replace('<!-- Mensagem de erro será inserida aqui -->',
+                                      f'<div class="error-message">{mensagem}</div>')
+                self.send_response(200)
+                self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
-                return 
+           
+                self.wfile.write(content_file.encode('utf-8'))
+      
             
             else:            
                 self.adicionar_turma(Codigo,Descricao)
@@ -323,23 +329,18 @@ class MyMandler(SimpleHTTPRequestHandler):
             Codigo = from_data.get('Codigo', [''])[0]
             Descricao = from_data.get('Descricao', [''])[0]
             
-            print("teste Codigo: "+ Codigo)
-            print("teste desc: "+ Descricao)
-            
-            with open('dados.aitividade.txt','r', encoding='utf-8') as file:
-                lines = file.readlines()
- 
-            with open('dados.atividade.txt','w', encoding='utf-8') as file:
-                for line in lines:
-                    Codigo, Descricao = line.strip().split(';')
-                    line = f"{Codigo};{Descricao} \n"
-                    file.write(line)
-                    
-            if any(line.startswith(f"{Codigo};") for line in open("dados.atividade.txt", "r", encoding="UTF-8")):
-                self.send_response(302)
-                self.send_header('Location', '/Turma_existente')
+            if self.Atividade_existente(Codigo,Descricao):
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Atividade.html'), 'r', encoding='utf-8') as existe:
+                    content_file = existe.read()
+                mensagem = "Atividade ja existe em nosso banco"
+                content_file = content_file.replace('<!-- Mensagem de erro será inserida aqui -->',
+                                      f'<div class="error-message">{mensagem}</div>')
+                self.send_response(200)
+                self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
-                return 
+           
+                self.wfile.write(content_file.encode('utf-8'))
+      
             
             else:            
                 self.adicionar_atividade(Codigo,Descricao)
