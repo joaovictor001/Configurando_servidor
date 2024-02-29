@@ -121,6 +121,19 @@ class MyMandler(SimpleHTTPRequestHandler):
 
             except FileNotFoundError:
                 pass
+            
+        elif self.path =='/Atividade':
+
+            try:
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Atividade.html'), 'r',encoding='UTF-8') as login_file:
+                    content = login_file.read()
+                self.send_response(200)
+                self.send_header("content-type","text/html")
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))          
+
+            except FileNotFoundError:
+                pass
        
         else:
 
@@ -141,6 +154,17 @@ class MyMandler(SimpleHTTPRequestHandler):
                         print(stored_senha_hash)
                         return senha_hash == stored_senha_hash
             return False
+    def Turma_existente(self, codigo, descricao):
+        #verifica se o login já existe
+            with open('dados.login.txt', 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.strip():
+                        codigo_txt, descricao_txt,  = line.strip().split(';')
+                    if codigo == codigo_txt:
+                        print(descricao)
+                        print(descricao_txt)
+                        return codigo == codigo_txt
+            return False
    
     def adicionar_usuario(self,login,senha,nome):
         senha_hash = hashlib.sha256(senha.encode("UTF-8")).hexdigest()
@@ -150,6 +174,10 @@ class MyMandler(SimpleHTTPRequestHandler):
     def adicionar_turma(self,turma,descricao):
         with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
             file.write(f'{turma};{descricao}\n')
+            
+    def adicionar_atividade(self,cod_atividade,descricao):
+        with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
+            file.write(f'{cod_atividade};{descricao}\n')        
  
  
     def remover_ultima_linha(self,arquivo):
@@ -240,7 +268,7 @@ class MyMandler(SimpleHTTPRequestHandler):
                     self.send_response(302)
                     self.send_header("Content-type", "text/html; charset=utf-8")
                     self.end_headers()
-                    self.wfile.write("Registro recebido com sucesso!!!". encode('utf-8'))
+                    
  
             else:
                         #Se o usuario não existe ou senha incorreta, redireciona para outra pagina
@@ -257,8 +285,8 @@ class MyMandler(SimpleHTTPRequestHandler):
             #Parseia os dados do formulario
             from_data = parse_qs(body, keep_blank_values=True)
  
-            Codigo = from_data.get('Codigo', [''])[0]
-            Descricao = from_data.get('Descricao', [''])[0]
+            Codigo = from_data.get('Codigo',[''])[0]
+            Descricao = from_data.get('Descricao',[''])[0]
             
             print("teste Codigo: "+ Codigo)
             print("teste desc: "+ Descricao)
@@ -269,7 +297,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             with open('dados.turmas.txt','w', encoding='utf-8') as file:
                 for line in lines:
                     Codigo, Descricao = line.strip().split(';')
-                    line = f"{Codigo};{Descricao} \n"
+                    line = f"{Codigo};{Descricao}\n"
                     file.write(line)
                     
             if any(line.startswith(f"{Codigo};") for line in open("dados.turmas.txt", "r", encoding="UTF-8")):
@@ -280,6 +308,41 @@ class MyMandler(SimpleHTTPRequestHandler):
             
             else:            
                 self.adicionar_turma(Codigo,Descricao)
+                self.send_response(302)
+                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.end_headers()
+                
+                
+        elif self.path.startswith('/cad_atividade'):
+            content_length = int(self.headers['Content-Length'])
+            #le o corpo dA REQUISIÇÃO
+            body= self.rfile.read(content_length).decode('utf-8')
+            #Parseia os dados do formulario
+            from_data = parse_qs(body, keep_blank_values=True)
+ 
+            Codigo = from_data.get('Codigo', [''])[0]
+            Descricao = from_data.get('Descricao', [''])[0]
+            
+            print("teste Codigo: "+ Codigo)
+            print("teste desc: "+ Descricao)
+            
+            with open('dados.aitividade.txt','r', encoding='utf-8') as file:
+                lines = file.readlines()
+ 
+            with open('dados.atividade.txt','w', encoding='utf-8') as file:
+                for line in lines:
+                    Codigo, Descricao = line.strip().split(';')
+                    line = f"{Codigo};{Descricao} \n"
+                    file.write(line)
+                    
+            if any(line.startswith(f"{Codigo};") for line in open("dados.atividade.txt", "r", encoding="UTF-8")):
+                self.send_response(302)
+                self.send_header('Location', '/Turma_existente')
+                self.end_headers()
+                return 
+            
+            else:            
+                self.adicionar_atividade(Codigo,Descricao)
                 self.send_response(302)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
