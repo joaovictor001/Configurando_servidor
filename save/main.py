@@ -6,9 +6,7 @@ from http.server import SimpleHTTPRequestHandler
 import socketserver
 from urllib.parse import parse_qs, urlparse
 import hashlib
-from database import conectar
-
-conexao = conectar()
+ 
 
 class MyMandler(SimpleHTTPRequestHandler):
     def list_directory(self, path):
@@ -122,32 +120,20 @@ class MyMandler(SimpleHTTPRequestHandler):
         else:
             super().do_GET()
             
-    # def usuario_existente(self, login, senha):
-    #     #verifica se o login já existe
-    #         with open('dados.login.txt', 'r', encoding='utf-8') as file:
-    #             for line in file:
-    #                 if line.strip():
-    #                     stored_login, stored_senha_hash, stored_nome = line.strip().split(';')
-    #                 if login == stored_login:
-    #                     senha_hash = hashlib.sha256(senha.encode('UTF-8')).hexdigest()
-    #                     print("Cheguei aqui significando que localizei o login informado.")
-    #                     print("senha:" + senha)
-    #                     print("senha_armazenada:" + senha)
-    #                     print(stored_senha_hash)
-    #                     return senha_hash == stored_senha_hash
-    #         return False
     def usuario_existente(self, login, senha):
-        cursor = conexao.cursor()
-        cursor.execute("SELECT senha FROM dados_login WHERE login = %s",(login,))
-        resultado = cursor.fetchone()
-        cursor.close()
-        if resultado:
-            senha_hash = hashlib.sha256(senha.encode('utf-8')).hexdigest()
-            return senha_hash == resultado[0]
-        
-        return False    
-    
-    
+        #verifica se o login já existe
+            with open('dados.login.txt', 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.strip():
+                        stored_login, stored_senha_hash, stored_nome = line.strip().split(';')
+                    if login == stored_login:
+                        senha_hash = hashlib.sha256(senha.encode('UTF-8')).hexdigest()
+                        print("Cheguei aqui significando que localizei o login informado.")
+                        print("senha:" + senha)
+                        print("senha_armazenada:" + senha)
+                        print(stored_senha_hash)
+                        return senha_hash == stored_senha_hash
+            return False
     def Turma_existente(self, codigo, descricao):
         #verifica se o login já existe
             with open('dados.turmas.txt', 'r', encoding='utf-8') as file:
@@ -171,19 +157,10 @@ class MyMandler(SimpleHTTPRequestHandler):
                         return codigo == codigo_txt
             return False
    
-    # def adicionar_usuario(self,login,senha,nome):
-    #     senha_hash = hashlib.sha256(senha.encode("UTF-8")).hexdigest()
-    #     with open('dados.login.txt', 'a', encoding='UTF-8') as file:
-    #         file.write(f'{login};{senha_hash};{nome}\n')
     def adicionar_usuario(self,login,senha,nome):
-        cursor = conexao.cursor()
         senha_hash = hashlib.sha256(senha.encode("UTF-8")).hexdigest()
-        cursor.execute("INSERT INTO dados_login(login,senha,nome) VALUES (%s,%s, %s) ", (login,senha_hash,nome))
-        
-        conexao.commit()
-        
-        cursor.close()
-    
+        with open('dados.login.txt', 'a', encoding='UTF-8') as file:
+            file.write(f'{login};{senha_hash};{nome}\n')
             
     def adicionar_turma(self,turma,descricao):
         with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
@@ -203,7 +180,6 @@ class MyMandler(SimpleHTTPRequestHandler):
     def do_POST(self):
 
         if self.path == '/enviar_login':
-            print("cheguei aqui")
  
             content_length = int(self.headers['content-Length'])
 
@@ -213,8 +189,8 @@ class MyMandler(SimpleHTTPRequestHandler):
  
             print(form_data)
             print("DADOS DO FORMULÁRIO")
-            print("E-mail:", form_data.get('email',[''])[0])
-            print("Senha:", form_data.get('senha',[''])[0])
+            print("E-mail:", form_data.get('email', [''])[0])
+            print("Senha:", form_data.get('senha', [''])[0])
            
             login = form_data.get('email', [''])[0]
             senha = form_data.get('senha', [''])[0]
@@ -229,27 +205,18 @@ class MyMandler(SimpleHTTPRequestHandler):
                 self.wfile.write(content_file.encode('utf-8'))
            
             else:
-                cursor = conexao.cursor()
-                cursor.execute("SELECT login FROM dados_login WHERE login = %s",(login,))
-                resultado = cursor.fetchone()
-                
-                
-                if resultado:
+                if any(line.startswith(f"{login};") for line in open("dados.login.txt", "r", encoding="UTF-8")):
                     self.send_response(302)
                     self.send_header('Location', '/login_failed')
                     self.end_headers()
-                    cursor.close()
-                    return
-                    
+                    return # adicionando um return para evitar a execução
     
                 else:
-                    # self.adicionar_usuario(login,senha, nome='None')
-                    self.send_response(302)
-                    self.send_header('Location', f'novo_cadastro?login={login}&senha={senha}')
-                    self.end_headers()
-                    cursor.close()
-                    return
-               
+                        self.adicionar_usuario(login,senha, nome='None')
+                        self.send_response(302)
+                        self.send_header('Location', f'novo_cadastro?login={login}&senha={senha}')
+                        self.end_headers()
+                return # adicionando um return para evitar a execução
  
         elif   self.path.startswith('/confirmar_cadastro'):
          
@@ -263,12 +230,31 @@ class MyMandler(SimpleHTTPRequestHandler):
             senha = from_data.get('senha', [''])[0]
             nome = from_data.get('nome', [''])[0]
  
-            
-            self.adicionar_usuario(login, senha,nome)
-            self.send_response(302)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write("registro recebido com sucesso !". encode('utf-8'))
+            senha_hash = hashlib.sha256(senha.encode('UTF-8')).hexdigest()
+            print("nome:" + nome)
+ 
+            if self.usuario_existente(login,senha):
+ 
+                with open('dados.login.txt','r', encoding='utf-8') as file:
+                    lines = file.readlines()
+ 
+                with open('dados.login.txt','w', encoding='utf-8') as file:
+                    for line in lines:
+                        stored_login, stored_senha,stored_nome = line.strip().split(';')
+                        if login == stored_login and senha_hash == stored_senha:
+                            line = f"{login};{senha_hash};{nome} \n"
+                        file.write(line)
+
+                    self.send_response(302)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    
+            else:
+                    self.remover_ultima_linha('dados.login.txt')
+                    self.send_response(302)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write("A senha não confere.Retome o procedimento!". encode('utf-8'))
                     
         elif self.path.startswith('/cad_turmas'):
             content_length = int(self.headers['Content-Length'])
