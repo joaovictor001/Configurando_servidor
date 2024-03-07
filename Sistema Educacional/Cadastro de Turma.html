@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro</title>
     <link rel="stylesheet" href="../Sistema Educacional/css/turma_e_atividade.css">
+    <script src="../js/tumas_infos.js" defer></script>
 </head>
 <body>
     
@@ -13,10 +14,10 @@
         <h2>Cadastro Turmas</h2>
         <form action="/cad_turmas" method="post">
             <label>Codigo:</label>
-            <input type="text" name="Codigo" required>
+            <input id="Codigo" type="text" name="Codigo" required>
             <label>Descrição:</label>
-            <input type="text" name="Descricao" required>
-            <button type="submit">Cadastrar</button>
+            <input id="Descricao" type="text" name="Descricao" required>
+            <button id="btn_addturma" type="submit">Cadastrar</button>
         </form>
     </div>
 </body>
