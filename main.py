@@ -148,28 +148,51 @@ class MyMandler(SimpleHTTPRequestHandler):
         return False    
     
     
-    def Turma_existente(self, codigo, descricao):
-        #verifica se o login já existe
-            with open('dados.turmas.txt', 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.strip():
-                        codigo_txt,descricao_txt = line.strip().split(';')
-                    if codigo == codigo_txt:
-                        print(descricao)
-                        print(descricao_txt)
-                        return codigo == codigo_txt
+    # def Turma_existente(self, codigo, descricao):
+    #     #verifica se o login já existe
+    #         with open('dados.turmas.txt', 'r', encoding='utf-8') as file:
+    #             for line in file:
+    #                 if line.strip():
+    #                     codigo_txt,descricao_txt = line.strip().split(';')
+    #                 if codigo == codigo_txt:
+    #                     print(descricao)
+    #                     print(descricao_txt)
+    #                     return codigo == codigo_txt
+    #         return False
+    
+    
+    def Turma_existente(self,Desc):
+        cursor = conexao.cursor()
+        cursor.execute("SELECT descricao FROM turmas WHERE descricao = %s",(Desc,))
+        resultado = cursor.fetchone()
+        cursor.close()
+        if resultado:
+            return True
+        else:
             return False
-    def Atividade_existente(self, codigo, descricao):
-        #verifica se o login já existe
-            with open('dados.aitividade.txt', 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.strip():
-                        codigo_txt,descricao_txt = line.strip().split(';')
-                    if codigo == codigo_txt:
-                        print(descricao)
-                        print(descricao_txt)
-                        return codigo == codigo_txt
+    def Atividade_existente(self,Desc):
+        cursor = conexao.cursor()
+        cursor.execute("SELECT descricao FROM atividades WHERE descricao = %s",(Desc,))
+        resultado = cursor.fetchone()
+        cursor.close()
+        if resultado:
+            return True
+        else:
             return False
+        
+         
+        
+    # def Atividade_existente(self, codigo, descricao):
+    #     #verifica se o login já existe
+    #         with open('dados.aitividade.txt', 'r', encoding='utf-8') as file:
+    #             for line in file:
+    #                 if line.strip():
+    #                     codigo_txt,descricao_txt = line.strip().split(';')
+    #                 if codigo == codigo_txt:
+    #                     print(descricao)
+    #                     print(descricao_txt)
+    #                     return codigo == codigo_txt
+    #         return False
    
     # def adicionar_usuario(self,login,senha,nome):
     #     senha_hash = hashlib.sha256(senha.encode("UTF-8")).hexdigest()
@@ -183,16 +206,29 @@ class MyMandler(SimpleHTTPRequestHandler):
         conexao.commit()
         
         cursor.close()
+        
+    def adicionar_turma(self,Desc):
+        cursor = conexao.cursor()
+        cursor.execute("INSERT INTO turmas(descricao) VALUES (%s) ",(Desc,))
+        
+        conexao.commit()
+        
+        cursor.close()
+        
     
             
-    def adicionar_turma(self,turma,descricao):
-        with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
-            file.write(f'{turma};{descricao}\n')
+    # def adicionar_turma(self,turma,descricao):
+    #     with open('dados.turmas.txt', 'a', encoding='UTF-8') as file:
+    #         file.write(f'{turma};{descricao}\n')
             
-    def adicionar_atividade(self,cod_atividade,descricao):
-        with open('dados.aitividade.txt', 'a', encoding='UTF-8') as file:
-            file.write(f'{cod_atividade};{descricao}\n')        
- 
+    def adicionar_atividade(self,Desc):
+        cursor = conexao.cursor()
+        cursor.execute("INSERT INTO atividades(descricao) VALUES (%s) ",(Desc,))
+        
+        conexao.commit()
+        
+        cursor.close()
+        
     def remover_ultima_linha(self,arquivo):
         print("Vou excluir ultima linha")
         with open(arquivo, 'r', encoding='utf-8') as file:
@@ -249,9 +285,8 @@ class MyMandler(SimpleHTTPRequestHandler):
                     self.end_headers()
                     cursor.close()
                     return
-               
- 
-        elif   self.path.startswith('/confirmar_cadastro'):
+        
+        elif self.path.startswith('/confirmar_cadastro'):
          
             content_length = int(self.headers['Content-Length'])
        
@@ -280,7 +315,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             Codigo = from_data.get('Codigo',[''])[0]
             Descricao = from_data.get('Descricao',[''])[0]
             
-            if self.Turma_existente(Codigo,Descricao):
+            if self.Turma_existente(Descricao):
                 with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r', encoding='utf-8') as existe:
                     content_file = existe.read()
                 mensagem = "Turma ja existe em nosso banco"
@@ -289,14 +324,17 @@ class MyMandler(SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
-           
                 self.wfile.write(content_file.encode('utf-8'))
       
             else:            
-                self.adicionar_turma(Codigo,Descricao)
+                self.adicionar_turma(Descricao)
                 self.send_response(302)
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
+                    content_file = existe.read()
+                self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
+                self.wfile.write(content_file.encode('utf-8'))
                   
         elif self.path.startswith('/cad_atividade'):
             content_length = int(self.headers['Content-Length'])
@@ -305,10 +343,10 @@ class MyMandler(SimpleHTTPRequestHandler):
          
             from_data = parse_qs(body, keep_blank_values=True)
  
-            Codigo = from_data.get('Codigo', [''])[0]
+            
             Descricao = from_data.get('Descricao', [''])[0]
             
-            if self.Atividade_existente(Codigo,Descricao):
+            if self.Atividade_existente(Descricao):
                 with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Atividade.html'), 'r', encoding='utf-8') as existe:
                     content_file = existe.read()
                 mensagem = "Atividade ja existe em nosso banco"
@@ -321,10 +359,15 @@ class MyMandler(SimpleHTTPRequestHandler):
                 self.wfile.write(content_file.encode('utf-8'))
                 
             else:            
-                self.adicionar_atividade(Codigo,Descricao)
+                self.adicionar_atividade(Descricao)
                 self.send_response(302)
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
+                    content_file = existe.read()
+                self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
+                self.wfile.write(content_file.encode('utf-8'))
+                  
                 
         else:
             super(MyMandler,self).do_POST()
