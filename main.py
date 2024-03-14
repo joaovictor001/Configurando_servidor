@@ -137,6 +137,7 @@ class MyMandler(SimpleHTTPRequestHandler):
     #                     return senha_hash == stored_senha_hash
     #         return False
     def usuario_existente(self, login, senha):
+        print(login+"_"+senha)
         cursor = conexao.cursor()
         cursor.execute("SELECT senha FROM dados_login WHERE login = %s",(login,))
         resultado = cursor.fetchone()
@@ -235,6 +236,54 @@ class MyMandler(SimpleHTTPRequestHandler):
             lines = file.readlines()
             with open(arquivo, 'w', encoding='utf-8') as file:
                 file.writelines(lines[:-1])
+                
+    def adicionar_turma_professor(self, descTurma,id_professor):
+        cursor = conexao.cursor()
+        cursor.execute("INSERT INTO turmas (descricao) VALUES (%s)", (descTurma,))
+        cursor.execute("SELECT id_turma FROM turmas WHERE descricao = %s ",(descTurma,))
+        resultado = cursor.fetchone()
+        cursor.execute("INSERT INTO turmas_professor (id_TURMA, id_professor) VALUES (%s, %s)",(resultado[0], id_professor))
+        conexao.commit()
+        conexao.close()
+
+    def carregar_turmas_professor(self,login):
+        print("!!!!!cheguei aqui !!!!!"+ login)
+        cursor= conexao.cursor()
+        cursor.execute("SELECT id_professor, nome FROM dados_login WHERE login = %s",(login,))
+        resultado = cursor.fetchone()
+        cursor.close()
+
+        id_professor = resultado[0]
+
+        cursor = conexao.cursor()
+        cursor.execute(
+            "SELECT turmas.id_turma, turmas.descricao FROM turmas_professor INNER JOIN turmas "
+            "ON turmas_professor.id_turma  = turmas.id_turma WHERE turmas_professor.id_professor = %s",(id_professor,))
+        turmas = cursor.fetchall()
+        cursor.close()
+
+        linhas_tabela = ""
+        for turma in turmas:
+            id_turma = turma[0]
+            descricao_turma = turma[1]
+            link_atividade = "<img src='icnatividade2.png'/>"
+            linhas = "<tr><td style='text-aling:center'>{}</td><td style='text-aling:center'>{}</td></tr>".format(descricao_turma,link_atividade)
+            linhas_tabela += linha
+
+        with open (os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'),'r',encoding='utf-8') as cad_turma_file:
+            content = cad_turma_file.read()
+
+            content = content.replace('{nome_professor}',resultado[1])
+            content = content.replace('{id_professor}', str(id_professor))
+            content = content.replace('{login}',str(login))
+
+        content = content.replace('<!-- Tabela com linha zebradas -->', linhas_tabela)
+        self.send_response(200)
+        self.send_header("content-type", "text/html; charset=utf-8")
+        self.end_headers()
+
+
+        self.wfile.write(content.encode('utf-8'))
  
     def do_POST(self):
 
@@ -252,18 +301,13 @@ class MyMandler(SimpleHTTPRequestHandler):
             print("E-mail:", form_data.get('email',[''])[0])
             print("Senha:", form_data.get('senha',[''])[0])
            
-            login = form_data.get('email', [''])[0]
-            senha = form_data.get('senha', [''])[0]
+            login = form_data.get('email',[''])[0]
+            senha = form_data.get('senha',[''])[0]
+            print("TESTE DE VALOR: "+ login,senha)
            
             if self.usuario_existente(login, senha):
-                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
-                    content_file = existe.read()
-                self.send_response(200)
-                self.send_header("Content-type", "text/html; charset=utf-8")
-                self.end_headers()
-            
-                self.wfile.write(content_file.encode('utf-8'))
-           
+                print(login+"AQUI")
+                self.carregar_turmas_professor(login)
             else:
                 cursor = conexao.cursor()
                 cursor.execute("SELECT login FROM dados_login WHERE login = %s",(login,))
@@ -312,8 +356,14 @@ class MyMandler(SimpleHTTPRequestHandler):
             #Parseia os dados do formulario
             from_data = parse_qs(body, keep_blank_values=True)
  
-            Codigo = from_data.get('Codigo',[''])[0]
-            Descricao = from_data.get('Descricao',[''])[0]
+            Descricao = form_data.get('Descricao',[''])[0]
+            id_professor = form_data.get('id_professor',[''])[0]
+            login = form_data.get('login',[''])[0]
+
+
+            print(f"Cad_turma, dados do formulario {Descricao}{id_professor}")
+            self.adicionar_turma_professor(Descricao,id_professor)
+            self.carregar_turmas_professor(login)
             
             if self.Turma_existente(Descricao):
                 with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r', encoding='utf-8') as existe:
@@ -328,6 +378,7 @@ class MyMandler(SimpleHTTPRequestHandler):
       
             else:            
                 self.adicionar_turma(Descricao)
+                self.adicionar_turma_professor(Descricao,id_professor)
                 self.send_response(302)
                 with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
                     content_file = existe.read()

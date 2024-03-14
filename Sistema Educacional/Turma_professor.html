@@ -11,15 +11,16 @@
     
     <div class="container">
         <!-- Mensagem de erro será inserida aqui -->
-        <h2>Cadastro Turmas</h2>
+        <h2>Turmas do professor</h2>
         <p>{nome_professor}</p>
         <form action="/cad_turmas" method="post">
-            <label>Codigo:</label>
+            <label>Descrição:</label>
+            <input id="descTurma" type="text" name="descTurma" required>
             <input type="hidden" id="id_professor" name="id_professor" value="{id_professor}">
             <input type="hidden" id="login" name="login" value="{login}">
-            <input id="Descricao" type="text" name="Descricao" required>
             <button type="submit">Cadastrar</button>
         </form>
+
         <table>
             <!-- Tabela com linha zebradas -->
         </table>
