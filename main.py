@@ -268,7 +268,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             descricao_turma = turma[1]
             link_atividade = "<img src='icnatividade2.png'/>"
             linhas = "<tr><td style='text-aling:center'>{}</td><td style='text-aling:center'>{}</td></tr>".format(descricao_turma,link_atividade)
-            linhas_tabela += linha
+            linhas_tabela += linhas
 
         with open (os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'),'r',encoding='utf-8') as cad_turma_file:
             content = cad_turma_file.read()
@@ -354,7 +354,7 @@ class MyMandler(SimpleHTTPRequestHandler):
             #le o corpo dA REQUISIÇÃO
             body= self.rfile.read(content_length).decode('utf-8')
             #Parseia os dados do formulario
-            from_data = parse_qs(body, keep_blank_values=True)
+            form_data = parse_qs(body, keep_blank_values=True)
  
             Descricao = form_data.get('Descricao',[''])[0]
             id_professor = form_data.get('id_professor',[''])[0]

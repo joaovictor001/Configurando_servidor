@@ -7,4 +7,3 @@ def conectar():
     password="senai",
     database="pwbe_escola"
 )
- 
