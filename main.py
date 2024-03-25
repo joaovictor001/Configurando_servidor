@@ -244,11 +244,11 @@ class MyMandler(SimpleHTTPRequestHandler):
         resultado = cursor.fetchone()
         cursor.execute("INSERT INTO turmas_professor (id_TURMA, id_professor) VALUES (%s, %s)",(resultado[0], id_professor))
         conexao.commit()
-        conexao.close()
+        cursor.close()
 
     def carregar_turmas_professor(self,login):
         print("!!!!!cheguei aqui !!!!!"+ login)
-        cursor= conexao.cursor()
+        cursor =conexao.cursor()
         cursor.execute("SELECT id_professor, nome FROM dados_login WHERE login = %s",(login,))
         resultado = cursor.fetchone()
         cursor.close()
@@ -377,15 +377,13 @@ class MyMandler(SimpleHTTPRequestHandler):
                 self.wfile.write(content_file.encode('utf-8'))
       
             else:            
-                self.adicionar_turma(Descricao)
                 self.adicionar_turma_professor(Descricao,id_professor)
-                self.send_response(302)
-                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Tela Professor.html'), 'r', encoding='utf-8') as existe:
-                    content_file = existe.read()
+                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r',encoding='UTF-8') as login_file:
+                    content = login_file.read()
                 self.send_response(200)
-                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.send_header("content-type","text/html")
                 self.end_headers()
-                self.wfile.write(content_file.encode('utf-8'))
+                self.wfile.write(content.encode('utf-8'))  
                   
         elif self.path.startswith('/cad_atividade'):
             content_length = int(self.headers['Content-Length'])
