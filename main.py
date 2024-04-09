@@ -53,9 +53,9 @@ class MyMandler(SimpleHTTPRequestHandler):
                 content = login_file.read()
                
 
-            mensagem = "Login e/ou senha incorreta. Tente novamente"
-            content = content.replace('<!-- Mensagem de erro será inserida aqui -->',
-                                      f'<div class="error-message">{mensagem}</div>')
+                mensagem = "Login e/ou senha incorreta. Tente novamente"
+                content = content.replace('<!-- Mensagem de erro será inserida aqui -->',
+                                        f'<div class="error-message">{mensagem}</div>')
            
             self.wfile.write(content.encode('utf-8'))
             
@@ -344,11 +344,11 @@ class MyMandler(SimpleHTTPRequestHandler):
  
             
             self.adicionar_usuario(login, senha,nome)
-            self.send_response(302)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write("registro recebido com sucesso !". encode('utf-8'))
-                    
+            self.carregar_turmas_professor(login)
+            
+            
+            
+
         elif self.path.startswith('/cad_turmas'):
             content_length = int(self.headers['Content-Length'])
             #le o corpo dA REQUISIÇÃO
@@ -362,8 +362,8 @@ class MyMandler(SimpleHTTPRequestHandler):
 
 
             print(f"Cad_turma, dados do formulario {Descricao}{id_professor}")
-            self.adicionar_turma_professor(Descricao,id_professor)
-            self.carregar_turmas_professor(login)
+
+            
             
             if self.Turma_existente(Descricao):
                 with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r', encoding='utf-8') as existe:
@@ -378,12 +378,10 @@ class MyMandler(SimpleHTTPRequestHandler):
       
             else:            
                 self.adicionar_turma_professor(Descricao,id_professor)
-                with open(os.path.join(os.getcwd(), 'Sistema Educacional/Cadastro de Turma.html'), 'r',encoding='UTF-8') as login_file:
-                    content = login_file.read()
+                self.carregar_turmas_professor(login)
                 self.send_response(200)
                 self.send_header("content-type","text/html")
                 self.end_headers()
-                self.wfile.write(content.encode('utf-8'))  
                   
         elif self.path.startswith('/cad_atividade'):
             content_length = int(self.headers['Content-Length'])
